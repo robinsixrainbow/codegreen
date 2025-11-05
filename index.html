@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuo-Chen Wu - Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Roboto:wght@300;400;500;700&family=Amiri&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-cyan: #28efef;
+            --text-glow: 0 0 10px #22c8ff, 0 0 10px #22c8ff, 0 0 0.4px #22c8ff;
+        }
+
+        html {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            width: 100%;
+            overflow-x: hidden;
+            font-family: 'Roboto', 'Noto Sans TC', sans-serif;
+            color: #fff;
+            background: #000;
+            position: relative;
+        }
+
+        /* 星空背景層 */
+        .bg-layers {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            min-width: 1240px;
+            transition: opacity 0.5s ease;
+        }
+
+        .bg-sky {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #0a1628 0%, #1a2e43 50%, #2a3e53 100%);
+            transition: all 1s ease;
+        }
+
+        body.theme-day .bg-sky {
+            background: linear-gradient(180deg, #4a6e8a 0%, #7a9ebc 50%, #aac8e4 100%);
+        }
+
+        .bg-stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20% 30%, white, transparent),
+                radial-gradient(2px 2px at 60% 70%, white, transparent),
+                radial-gradient(1px 1px at 50% 50%, white, transparent),
+                radial-gradient(1px 1px at 80% 10%, white, transparent),
+                radial-gradient(2px 2px at 90% 60%, white, transparent),
+                radial-gradient(1px 1px at 33% 80%, white, transparent),
+                radial-gradient(1px 1px at 15% 90%, white, transparent);
+            background-size: 200% 200%;
+            animation: twinkle 8s ease-in-out infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .bg-constellation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.15;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="10" cy="10" r="1" fill="white"/><circle cx="50" cy="30" r="1" fill="white"/><circle cx="80" cy="20" r="1" fill="white"/><line x1="10" y1="10" x2="50" y2="30" stroke="white" stroke-width="0.5" opacity="0.3"/><line x1="50" y1="30" x2="80" y2="20" stroke="white" stroke-width="0.5" opacity="0.3"/></svg>') repeat;
+        }
+
+        /* Canvas 粒子效果 */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 邊界裝飾線 */
+        .memori {
+            position: fixed;
+            top: 0;
+            width: 8px;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(255,255,255,0.1) 0px,
+                rgba(255,255,255,0.1) 2px,
+                transparent 2px,
+                transparent 10px
+            );
+            z-index: 10;
+        }
+
+        .memori-left { left: 0; }
+        .memori-right { right: 0; }
+
+        /* 主容器 */
+        #stage {
+            position: relative;
+            min-width: 1240px;
+            z-index: 5;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        #stage.loaded {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Audio Select Modal */
+        #audio-select {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s ease;
+        }
+
+        #audio-select.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .audio-select-content {
+            text-align: center;
+            animation: fadeInUp 1s ease;
+        }
+
+        .audio-select-logo {
+            font-family: 'Amiri', serif;
+            font-size: 3rem;
+            color: var(--primary-cyan);
+            text-shadow: var(--text-glow);
+            margin-bottom: 40px;
+            letter-spacing: 0.3em;
+        }
+
+        .audio-select-text {
+            font-size: 1rem;
+            line-height: 1.8;
+            margin-bottom: 40px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .audio-select-buttons {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+        }
+
+        .audio-btn {
+            padding: 12px 40px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .audio-btn:hover {
+            background: rgba(40, 239, 239, 0.2);
+            border-color: var(--primary-cyan);
+            transform: scale(1.05);
+        }
+
+        /* Opening Animation */
+        .opening-logo {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40%;
+            max-width: 600px;
+            z-index: 9998;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .opening-logo.show {
+            opacity: 1;
+        }
+
+        .opening-logo svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .opening-logo .path {
+            stroke: #fff;
+            fill: rgba(255, 255, 255, 0);
+            stroke-width: 0.5;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+        }
+
+        /* 導航欄 */
+        #header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 140px;
+            padding: 20px 40px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        #header.scrolled {
+            height: 100px;
+            padding: 10px 40px;
+        }
+
+        .site-title {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .site-title h1 {
+            font-size: 2rem;
+            font-weight: 300;
+            color: var(--primary-cyan);
+            text-shadow: var(--text-glow);
+            letter-spacing: 0.2em;
+        }
+
+        .site-title .subtitle {
+            font-size: 0.875rem;
+            color: #fff;
+            margin-top: 5px;
+            letter-spacing: 0.1em;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .main-nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .main-nav a {
+            position: relative;
+            padding: 12px 15px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 300;
+            transition: all 0.3s ease;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><circle cx="5" cy="5" r="1" fill="white" opacity="0.3"/></svg>') center bottom no-repeat;
+            padding-bottom: 20px;
+        }
+
+        .main-nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 1px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.6);
+            transition: width 0.3s ease;
+        }
+
+        .main-nav a:hover,
+        .main-nav a.active {
+            color: var(--primary-cyan);
+            text-shadow: 0 0 8px rgba(255,255,255,0.4);
+        }
+
+        .main-nav a:hover::after,
+        .main-nav a.active::after {
+            width: 100%;
+        }
+
+        /* Controllers (Audio & Theme) */
+        .controllers {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .controller-box {
+            position: relative;
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.75rem;
+        }
+
+        .controller-box::before,
+        .controller-box::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            left: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="3"><line x1="0" y1="1.5" x2="100" y2="1.5" stroke="white" stroke-width="1" opacity="0.3"/></svg>') repeat-x;
+        }
+
+        .controller-box::before { top: -3px; }
+        .controller-box::after { bottom: -3px; }
+
+        .controller-box:hover {
+            background: rgba(40, 239, 239, 0.1);
+            border-color: var(--primary-cyan);
+        }
+
+        .controller-box.active {
+            background: rgba(40, 239, 239, 0.2);
+            border-color: var(--primary-cyan);
+        }
+
+        .controller-label {
+            font-size: 0.625rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 4px;
+        }
+
+        .controller-status {
+            color: #fff;
+            font-size: 0.75rem;
+        }
+
+        /* News Box (參考 Planetarian) */
+        .news-box {
+            position: absolute;
+            left: 40px;
+            top: 15px;
+            width: 400px;
+            height: 45px;
+            border-top: 3px solid rgba(255, 255, 255, 0.3);
+            border-bottom: 3px solid rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+            transition: all 0.4s ease;
+            background: transparent;
+        }
+
+        .news-box:hover {
+            height: 150px;
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .news-box-title {
+            font-size: 0.625rem;
+            color: rgba(255, 255, 255, 0.7);
+            padding: 14px 0 0 10px;
+            float: left;
+            width: 50px;
+        }
+
+        .news-box-content {
+            float: left;
+            width: 350px;
+            padding-top: 12px;
+        }
+
+        .news-item {
+            font-size: 0.75rem;
+            padding: 5px 0;
+            color: rgba(255, 255, 255, 0.9);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 主內容區 */
+        #main-content {
+            position: relative;
+            padding-top: 180px;
+            min-height: 100vh;
+        }
+
+        /* 首屏 */
+        .first-view {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 40px;
+        }
+
+        .profile-hero {
+            position: relative;
+            z-index: 10;
+        }
+
+        .profile-image-wrapper {
+            margin-bottom: 40px;
+            animation: fadeInScale 1.5s ease;
+        }
+
+        .profile-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 30px rgba(40, 239, 239, 0.3);
+            object-fit: cover;
+            transition: all 0.5s ease;
+        }
+
+        .profile-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px rgba(40, 239, 239, 0.5);
+        }
+
+        .hero-title {
+            font-family: 'Amiri', serif;
+            font-size: 3.5rem;
+            font-weight: 300;
+            margin-bottom: 20px;
+            letter-spacing: 0.3em;
+            animation: fadeInUp 1s ease 0.3s both;
+            text-shadow: var(--text-glow);
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 40px;
+            color: rgba(255, 255, 255, 0.9);
+            animation: fadeInUp 1s ease 0.6s both;
+        }
+
+        .hero-contact {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            animation: fadeInUp 1s ease 0.9s both;
+        }
+
+        .contact-item {
+            font-size: 0.875rem;
+            padding: 8px 0;
+            position: relative;
+        }
+
+        /* Visual Selector */
+        .visual-selector {
+            position: absolute;
+            right: 100px;
+            bottom: 200px;
+            z-index: 100;
+        }
+
+        .visual-selector-title {
+            font-size: 0.625rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+            padding-left: 52px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="10"><line x1="0" y1="5" x2="40" y2="5" stroke="white" stroke-width="1" opacity="0.3"/></svg>') left center no-repeat;
+        }
+
+        .visual-selector-btn {
+            width: 200px;
+            height: 150px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .visual-selector-btn:hover {
+            transform: scale(1.05);
+            border-color: var(--primary-cyan);
+        }
+
+        .visual-selector-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(40, 239, 239, 0.2) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .visual-selector-btn:hover::before {
+            opacity: 1;
+        }
+
+        .visual-selector-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.6s ease;
+        }
+
+        .visual-selector-btn:hover .visual-selector-img {
+            transform: scale(1.1);
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 內容區塊 */
+        .content-section {
+            position: relative;
+            padding: 100px 40px;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s ease;
+        }
+
+        .content-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-family: 'Amiri', serif;
+            font-size: 2rem;
+            font-weight: 300;
+            text-align: center;
+            margin-bottom: 15px;
+            position: relative;
+            text-shadow: var(--text-glow);
+            letter-spacing: 0.2em;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .section-subtitle {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: center;
+            margin-bottom: 60px;
+            letter-spacing: 0.1em;
+        }
+
+        /* 卡片樣式 */
+        .info-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 30px;
+            margin-bottom: 30px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .info-card::before,
+        .info-card::after {
+            content: '';
+            position: absolute;
+            background: linear-gradient(to bottom, #fff 0%, #666 100%);
+            transition: all 0.3s ease;
+        }
+
+        .info-card::before {
+            top: 0;
+            left: 0;
+            width: 1px;
+            height: 0;
+        }
+
+        .info-card::after {
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: linear-gradient(to right, #fff 0%, #666 100%);
+        }
+
+        .info-card:hover::before {
+            height: 100%;
+        }
+
+        .info-card:hover::after {
+            width: 100%;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(40, 239, 239, 0.4);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .card-period {
+            color: var(--primary-cyan);
+            font-size: 0.875rem;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        .card-location {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.875rem;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        .card-content {
+            font-size: 0.875rem;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* 技能網格 */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .skill-box {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .skill-box:hover {
+            transform: translateY(-5px);
+            border-color: rgba(40, 239, 239, 0.4);
+        }
+
+        .skill-box h3 {
+            color: var(--primary-cyan);
+            font-size: 1.125rem;
+            margin-bottom: 20px;
+            font-weight: 400;
+            text-shadow: var(--text-glow);
+        }
+
+        .skill-box ul {
+            list-style: none;
+        }
+
+        .skill-box li {
+            padding: 8px 0;
+            font-size: 0.875rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            line-height: 1.7;
+        }
+
+        .skill-box li:last-child {
+            border-bottom: none;
+        }
+
+        /* 發表列表 */
+        .publication-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .publication-item {
+            background: rgba(0, 0, 0, 0.6);
+            border-left: 3px solid var(--primary-cyan);
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .publication-item:hover {
+            transform: translateX(10px);
+            border-left-color: #fff;
+        }
+
+        .pub-badge {
+            display: inline-block;
+            background: rgba(40, 239, 239, 0.2);
+            color: var(--primary-cyan);
+            padding: 4px 12px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            margin-bottom: 10px;
+        }
+
+        .pub-title {
+            font-size: 1rem;
+            color: #fff;
+            margin-bottom: 8px;
+            font-weight: 400;
+        }
+
+        .pub-authors {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 5px;
+        }
+
+        .pub-journal {
+            font-size: 0.875rem;
+            color: var(--primary-cyan);
+            font-style: italic;
+        }
+
+        .pub-link {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 24px;
+            background: rgba(40, 239, 239, 0.1);
+            color: var(--primary-cyan);
+            text-decoration: none;
+            border: 1px solid rgba(40, 239, 239, 0.4);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px rgba(40, 239, 239, 0.3);
+        }
+
+        .pub-link:hover {
+            background: rgba(40, 239, 239, 0.2);
+            border-color: var(--primary-cyan);
+            box-shadow: 0 0 15px rgba(40, 239, 239, 0.4), 
+                        inset 0 0 10px rgba(40, 239, 239, 0.1);
+            transform: translateY(-2px);
+            text-shadow: var(--text-glow);
+        }
+
+        /* 專利網格 */
+        .patents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .patent-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .patent-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(40, 239, 239, 0.4);
+        }
+
+        .patent-number {
+            color: var(--primary-cyan);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .patent-period {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.875rem;
+            margin-bottom: 15px;
+        }
+
+        .patent-title {
+            font-size: 0.875rem;
+            line-height: 1.7;
+        }
+
+        /* 獎項網格 */
+        .awards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .award-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .award-card::before {
+            content: '★';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            font-size: 100px;
+            color: rgba(40, 239, 239, 0.1);
+        }
+
+        .award-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(40, 239, 239, 0.6);
+            background: rgba(40, 239, 239, 0.1);
+        }
+
+        .award-year {
+            color: var(--primary-cyan);
+            font-weight: 500;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .award-title {
+            font-size: 1.125rem;
+            margin-bottom: 8px;
+            font-weight: 400;
+        }
+
+        .award-org {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* 頁尾 */
+        #footer {
+            position: relative;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.8);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .copyright {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.7;
+        }
+
+        /* 回頂按鈕 */
+        .scroll-top {
+            position: fixed;
+            right: 40px;
+            bottom: 40px;
+            width: 50px;
+            height: 50px;
+            background: rgba(40, 239, 239, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+
+        .scroll-top.visible {
+            display: flex;
+        }
+
+        .scroll-top:hover {
+            background: rgba(40, 239, 239, 0.4);
+            transform: translateY(-5px);
+        }
+
+        .scroll-top::before {
+            content: '↑';
+            color: #fff;
+            font-size: 1.5rem;
+        }
+
+        /* Loading 畫面 */
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.7s ease;
+        }
+
+        .loader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader-content {
+            text-align: center;
+        }
+
+        .loader-title {
+            font-family: 'Amiri', serif;
+            font-size: 2rem;
+            color: var(--primary-cyan);
+            text-shadow: var(--text-glow);
+            margin-bottom: 30px;
+            letter-spacing: 0.3em;
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            position: relative;
+            box-shadow: 0 2px 24px 0 #22c8ff;
+        }
+
+        .progress-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: var(--primary-cyan);
+            box-shadow: 0 0 10px var(--primary-cyan);
+            transition: width 0.3s ease;
+        }
+
+        /* 專案卡片 */
+        .project-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 25px;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(40, 239, 239, 0.4);
+        }
+
+        .project-title {
+            font-size: 1.25rem;
+            color: var(--primary-cyan);
+            margin-bottom: 20px;
+            font-weight: 400;
+        }
+
+        .project-section {
+            margin-bottom: 20px;
+        }
+
+        .project-section h4 {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            margin-bottom: 10px;
+            font-weight: 400;
+        }
+
+        .project-section p {
+            font-size: 0.875rem;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* 響應式 */
+        @media (max-width: 1240px) {
+            .bg-layers, #stage {
+                min-width: 100%;
+            }
+            .memori, .news-box, .visual-selector {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+            .hero-subtitle {
+                font-size: 1.125rem;
+            }
+            .section-title {
+                font-size: 1.5rem;
+            }
+            .main-nav {
+                flex-direction: column;
+                gap: 5px;
+            }
+            .controllers {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .hero-contact {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .content-section {
+                padding: 60px 20px;
+            }
+            .skills-grid,
+            .patents-grid,
+            .awards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Audio Select Modal -->
+    <div id="audio-select">
+        <div class="audio-select-content">
+            <div class="audio-select-logo">Code Green</div>
+            <div class="audio-select-text">
+                本サイトは音声、BGMを含んでおります。<br>
+                音声、BGMをONにしますと、本サイトをよりお楽しみいただけます。<br>
+                ON / OFFをお選びください。
+            </div>
+            <div class="audio-select-buttons">
+                <button class="audio-btn" onclick="selectAudio(true)">ON</button>
+                <button class="audio-btn" onclick="selectAudio(false)">OFF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Opening Logo Animation -->
+    <div class="opening-logo" id="openingLogo">
+        <svg viewBox="0 0 520 120" xmlns="http://www.w3.org/2000/svg">
+            <text x="260" y="80" font-family="Amiri, serif" font-size="60" text-anchor="middle" class="path">
+                KUO-CHEN WU
+            </text>
+        </svg>
+    </div>
+
+    <!-- Loading 畫面 -->
+    <div class="loader" id="loader">
+        <div class="loader-content">
+            <div class="loader-title">LOADING</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 背景層 -->
+    <div class="bg-layers">
+        <div class="bg-sky"></div>
+        <div class="bg-stars"></div>
+        <div class="bg-constellation"></div>
+    </div>
+
+    <!-- 粒子效果 -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- 邊界裝飾 -->
+    <div class="memori memori-left"></div>
+    <div class="memori memori-right"></div>
+
+    <!-- Hidden Audio Elements -->
+    <audio id="bgm" loop>
+        <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" type="audio/wav">
+    </audio>
+    <audio id="se-click">
+        <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" type="audio/wav">
+    </audio>
+
+    <!-- 主舞台 -->
+    <div id="stage">
+        <!-- 導航欄 -->
+        <header id="header">
+            <!-- News Box -->
+            <div class="news-box">
+                <div class="news-box-title">NEWS</div>
+                <div class="news-box-content">
+                    <div class="news-item">2025.10: Published Q1 paper in Cancers</div>
+                    <div class="news-item">2025.10: Outstanding Doctoral Dissertation Award</div>
+                    <div class="news-item">2025.06: Published Q2 paper in Bioengineering</div>
+                </div>
+            </div>
+
+            <div class="site-title">
+                <h1>KUO-CHEN, WU</h1>
+                <div class="subtitle">PORTFOLIO</div>
+            </div>
+            
+            <div class="nav-container">
+                <nav class="main-nav">
+                    <a href="#about">ABOUT</a>
+                    <a href="#education">EDUCATION</a>
+                    <a href="#experience">EXPERIENCE</a>
+                    <a href="#skills">SKILLS</a>
+                    <a href="#publications">PUBLICATIONS</a>
+                    <a href="#patents">PATENTS</a>
+                    <a href="#awards">AWARDS</a>
+                </nav>
+
+                <!-- Controllers -->
+                <div class="controllers">
+                    <div class="controller-box" id="bgmController" onclick="toggleBGM()">
+                        <div class="controller-label">BGM</div>
+                        <div class="controller-status">OFF</div>
+                    </div>
+                    <div class="controller-box" id="themeController" onclick="toggleTheme()">
+                        <div class="controller-label">THEME</div>
+                        <div class="controller-status">NIGHT</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主內容 -->
+        <main id="main-content">
+            <!-- 首屏 -->
+            <section class="first-view">
+                <div class="profile-hero">
+                    <div class="profile-image-wrapper">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Ccircle cx='100' cy='100' r='95' fill='%231a2e43'/%3E%3Ctext x='100' y='130' font-size='60' text-anchor='middle' fill='%2328efef' font-family='Arial'%3EWu KC%3C/text%3E%3C/svg%3E" alt="Profile" class="profile-image" id="profileImage">
+                    </div>
+                    <h1 class="hero-title">KUO-CHEN, WU</h1>
+                    <p class="hero-subtitle">Algorithm Engineer | AI & Medical Imaging Specialist</p>
+                    <div class="hero-contact">
+                        <div class="contact-item">📞 0925595900</div>
+                        <div class="contact-item">📧 d09945002@ntu.edu.tw</div>
+                        <div class="contact-item">📧 robinsixrainbow@gmail.com</div>
+                    </div>
+                </div>
+
+                <!-- Visual Selector -->
+                <div class="visual-selector">
+                    <div class="visual-selector-title">VISUAL SELECTOR</div>
+                    <div class="visual-selector-btn" onclick="changeVisual()">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='150'%3E%3Crect fill='%231a2e43' width='200' height='150'/%3E%3Ctext x='100' y='80' font-size='20' text-anchor='middle' fill='%2328efef'%3ECLICK TO CHANGE%3C/text%3E%3C/svg%3E" alt="Visual" class="visual-selector-img" id="visualImg">
+                    </div>
+                </div>
+            </section>
+
+            <!-- About Section -->
+            <section class="content-section" id="about">
+                <div class="section-inner">
+                    <h2 class="section-title">ABOUT</h2>
+                    <p class="section-subtitle">Self Introduction</p>
+                    <div class="info-card">
+                        <p class="card-content">
+                            I am a Ph.D. specializing in Biomedical Electronics and Bioinformatics at National Taiwan University. 
+                            With extensive experience in medical image processing, deep learning, and AI-driven healthcare solutions, 
+                            I have published over 10 high-quality papers in international journals and secured 8 international invention patents.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Education Section -->
+            <section class="content-section" id="education">
+                <div class="section-inner">
+                    <h2 class="section-title">EDUCATION</h2>
+                    <p class="section-subtitle">Academic Background</p>
+                    
+                    <div class="info-card">
+                        <h3 class="card-title">National Taiwan University</h3>
+                        <span class="card-period">Sep. 2020 – Aug. 2025</span>
+                        <p class="card-location">Taipei, Taiwan</p>
+                        <p class="card-content"><strong>Doctor of Biomedical Electronics and Bioinformatics</strong></p>
+                    </div>
+                    <!--
+                    <div class="info-card">
+                        <h3 class="card-title">National Chung Hsing University</h3>
+                        <span class="card-period">Sep. 2017 – Jan. 2020</span>
+                        <p class="card-location">Taichung, Taiwan</p>
+                        <p class="card-content"><strong>Master of Computer Science and Engineering</strong></p>
+                    </div>
+
+                    <div class="info-card">
+                        <h3 class="card-title">Providence University</h3>
+                        <span class="card-period">Sep. 2012 – Jan. 2016</span>
+                        <p class="card-location">Taichung, Taiwan</p>
+                        <p class="card-content"><strong>Bachelor of Financial and Computational Mathematics</strong></p>
+                    </div>
+                    -->
+                </div>
+            </section>
+
+            
+
+            <!-- Experience Section -->
+            <section class="content-section" id="experience">
+                <div class="section-inner">
+                    <h2 class="section-title">PROFESSIONAL EXPERIENCE</h2>
+                    <p class="section-subtitle">Career History</p>
+
+                    <div class="project-card">
+                        <h3 class="card-title">Algorithm Engineer</h3>
+                        <span class="card-period">Jul. 2020 – Present</span>
+                        <p class="card-location">China Medical University Hospital, AI Center</p>
+                        
+                        <div class="project-title">Medical Imaging AI Development</div>
+                        
+                        <div class="project-section">
+                            <h4>■ Result</h4>
+                            <p>Published 10+ papers in Q1/Q2 journals, secured 8 international patents, achieved FDA clearance, and won the 20th National Innovation Award.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Skills Section -->
+            <section class="content-section" id="skills">
+                <div class="section-inner">
+                    <h2 class="section-title">TECHNICAL SKILLS</h2>
+                    <p class="section-subtitle">Professional Capabilities</p>
+                    
+                    <div class="skills-grid">
+                        <div class="skill-box">
+                            <h3>AI & Machine Learning</h3>
+                            <ul>
+                                <li>Medical Image Processing</li>
+                                <li>Natural Language Processing</li>
+                                <li>Prompt Engineering</li>
+                                <li>RAG & LLM Fine-Tuning</li>
+                                <li>PyTorch & TensorFlow</li>
+                                <li>Radiomics Analysis</li>
+                            </ul>
+                        </div>
+
+                        <div class="skill-box">
+                            <h3>Programming Languages</h3>
+                            <ul>
+                                <li>Python</li>
+                                <li>C / C++ / C#</li>
+                                <li>R</li>
+                                <li>Matlab</li>
+                            </ul>
+                        </div>
+
+                        <div class="skill-box">
+                            <h3>Web & DevOps</h3>
+                            <ul>
+                                <li>HTML & CSS</li>
+                                <li>GitHub</li>
+                                <li>Continuous Integration</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Publications Section -->
+            <section class="content-section" id="publications">
+                <div class="section-inner">
+                    <h2 class="section-title">PUBLICATIONS</h2>
+                    <p class="section-subtitle">Selected Research Papers</p>
+
+                    <div class="publication-list">
+
+                        <div class="publication-item">
+                            <span class="pub-badge">Conference</span>
+                            <div class="pub-title">TCT-151 Comprehensive Evaluation of Coronary Artery and Vessel-Specific Calcification Using Deep Learning on Non-Gated Chest CT. </div>
+                            <div class="pub-authors">Shih Sheng Chang, Kuo-Chen Wu, Mohamad Alkhouli</div>
+                            <div class="pub-journal">JACC, Volume 86, Number 17_Supplement (2025)</div>
+                            <a href="https://doi.org/10.1016/j.jacc.2025.09.224" class="pub-link" target="_blank">View Publication</a>
+                        </div>
+
+                        <div class="publication-item">
+                            <span class="pub-badge">CARDIAC & CARDIOVASCULAR SYSTEMS</span>
+                            <div class="pub-title">Application of Deep Learning in Automated Localization and Interpretation of Coronary Artery Calcification in Oncological PET/CT Scans. </div>
+                            <div class="pub-authors">Wu, K. C., Hsieh, T. C., Hsu, Z. K., Chang, C. J., Yeh, Y.C., Lu, L. S., Chang, Y. Y., & Kao, C. H.</div>
+                            <div class="pub-journal">International Journal of Cardiovascular Imaging, Volume 41, 453-465 (2025)</div>
+                            <a href="https://doi.org/10.1007/s10554-025-03327-8" class="pub-link" target="_blank">View Publication</a>
+                        </div>
+
+                        <div class="publication-item">
+                            <span class="pub-badge">RADIOLOGY, NUCLEAR MEDICINE & MEDICAL IMAGING</span>
+                            <div class="pub-title">Early Prediction of Distant Metastasis in Patients with Uterine Cervical Cancer Treated with Definitive Chemoradiotherapy by Deep Learning Using Pretreatment [18F] Fluorodeoxyglucose Positron Emission Tomography/Computed Tomography. </div>
+                            <div class="pub-authors">Wu, K. C., Chen, S. W., Hsieh, T. C., Yen, K. Y., Chang, C. J., Kuo, Y. C., Chang, R. F., & Chia-Hung, K.</div>
+                            <div class="pub-journal">Nuclear Medicine Communications, Volume 45, 196-202 (2025)</div>
+                            <a href="https://doi.org/10.1097/MNM.0000000000001799" class="pub-link" target="_blank">View Publication</a>
+                        </div>
+
+                        <div class="publication-item">
+                            <span class="pub-badge">RADIOLOGY, NUCLEAR MEDICINE & MEDICAL IMAGING</span>
+                            <div class="pub-title">Early Prediction of Radiotherapy Outcomes in Pharyngeal Cancer Using Deep Learning on Baseline [18F] Fluorodeoxyglucose Positron Emission Tomography/Computed Tomography. </div>
+                            <div class="pub-authors">Wu, K. C., Chen, S. W., Hsieh, T. C., Yen, K. Y., Chang, C. J., Kuo, Y. C., Chang, R. F., & Chia-Hung, K.</div>
+                            <div class="pub-journal">European Journal of Radiology, Volume 181, 111811 (2024)</div>
+                            <a href="https://doi.org/10.1016/j.ejrad.2024.111811" class="pub-link" target="_blank">View Publication</a>
+                        </div>
+
+                        <div class="publication-item">
+                            <span class="pub-badge">RADIOLOGY, NUCLEAR MEDICINE & MEDICAL IMAGING</span>
+                            <div class="pub-title">Imaging prediction of KRAS mutation in patients with rectal cancer through deep metric learning by using pretreatment [18F] Fluorodeoxyglucose positron emission tomography/computed tomography. </div>
+                            <div class="pub-authors">Wu, K. C., Chen, S. W., Hsieh, T. C., Yen, K. Y., Chang, C. J., Kuo, Y C., Hsu, Y. J., Chang, R. F., & Kao, C. H.</div>
+                            <div class="pub-journal">British Journal of Radiology, Volume 96, 20230243 (2023)</div>
+                            <a href="https://doi.org/10.1259/bjr.20230243" class="pub-link" target="_blank">View Publication</a>
+                        </div>
+
+                        <div class="publication-item">
+                            <span class="pub-badge">Conference</span>
+                            <div class="pub-title">POS0925 Automatic scoring of ultrasound synovial hypertrophy in rheumatoid arthritis through
+integrating multiple convolutional neural network models.</div>
+                            <div class="pub-authors">C.C. Huang, P. Huang, K.J. Yeo, C.J. Chang, K.C. Wu, W.J. Hong, S.H. Chang, J.L. Lan, D.Y. Chen, C.H. Kao.</div>
+                            <div class="pub-journal">Annals of the Rheumatic Diseases, Volume 82, Supplement 1 (2023)</div>
+                            <a href="https://doi.org/10.1136/annrheumdis-2023-eular.4166" class="pub-link" target="_blank">View Publication</a>
+                        </div>
+                        
+                    </div>
+
+                    <div style="text-align: center; margin-top: 40px; color: var(--primary-cyan);">
+                        <p style="font-size: 1.125rem;">5-Year CJA Score: <strong>602.500</strong> | Total: <strong>15+ Publications</strong></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Patents Section -->
+            <section class="content-section" id="patents">
+                <div class="section-inner">
+                    <h2 class="section-title">PATENTS</h2>
+                    <p class="section-subtitle">Intellectual Property</p>
+
+                    <div class="patents-grid">
+                        <div class="patent-card">
+                            <div class="patent-number">Taiwan: M640363</div>
+                            <div class="patent-period">2023 ~ 2033</div>
+                            <p class="patent-title">Artificial Intelligence Recognition Device for Chinese Herbal Medicine Decoction.</p>
+                        </div>
+
+                        <div class="patent-card">
+                            <div class="patent-number">Taiwan: I726459</div>
+                            <div class="patent-period">2021 ~ 2039</div>
+                            <p class="patent-title">Transfer Learning Aided Prediction System, Method and Computer Program Product Thereof</p>
+                        </div>
+
+                        <div class="patent-card">
+                            <div class="patent-number">Taiwan: I723312</div>
+                            <div class="patent-period">2021 ~ 2038</div>
+                            <p class="patent-title">Computer-Aided Recognition System for Treatment Response of Rectal Cancer, and Its
+Method and Computer Program Product.</p>
+                        </div>
+
+                        <div class="patent-card">
+                            <div class="patent-number">Taiwan: I681406</div>
+                            <div class="patent-period">2020 ~ 2038</div>
+                            <p class="patent-title">Deep learning of Tumor Image-Aided Prediction of Prognosis of Patients with Uterine
+Cervical Cancer System, Method and Computer Program Product Thereof.</p>
+                        </div>
+
+                        <div class="patent-card">
+                            <div class="patent-number">Republic of China: CN112712875B</div>
+                            <div class="patent-period">2022 ~ 2039</div>
+                            <p class="patent-title">Auxiliary Prediction System and Method for Transfer Learning.</p>
+                        </div>
+
+                        <div class="patent-card">
+                            <div class="patent-number">Republic of China: CN111382756B</div>
+                            <div class="patent-period">2018 ~ 2038</div>
+                            <p class="patent-title">Image Computer-Assisted Rectal Cancer Treatment Response Prediction System, Method and
+Computer Program.</p>
+                        </div>
+
+                        <div class="patent-card">
+                            <div class="patent-number">U.S.A: 11,164,676 B2</div>
+                            <div class="patent-period">2021 ~ 2039</div>
+                            <p class="patent-title">Computer-Aided Recognition System for Treatment Response of Rectal Cancer, and
+Computer Program Product.</p>
+                        </div>
+
+                        <div class="patent-card">
+                            <div class="patent-number">U.S.A: 10,896,502 B2</div>
+                            <div class="patent-period">2021 ~ 2039</div>
+                            <p class="patent-title">Prediction System, Method and Computer Program Product Thereof.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Awards Section -->
+            <section class="content-section" id="awards">
+                <div class="section-inner">
+                    <h2 class="section-title">AWARDS & HONORS</h2>
+                    <p class="section-subtitle">Recognition & Achievement</p>
+
+                    <div class="awards-grid">
+                        <div class="award-card">
+                            <div class="award-year">2025</div>
+                            <h3 class="award-title">Outstanding Doctoral Dissertation</h3>
+                            <p class="award-org">National Taiwan University</p>
+                        </div>
+
+                        <div class="award-card">
+                            <div class="award-year">2025</div>
+                            <h3 class="award-title">Silver Medal</h3>
+                            <p class="award-org">臺灣數創大賞 - 智慧+組</p>
+                        </div>
+
+                        <div class="award-card">
+                            <div class="award-year">2025</div>
+                            <h3 class="award-title">Outstanding Student Research</h3>
+                            <p class="award-org">National Taiwan University</p>
+                        </div>
+
+                        <div class="award-card">
+                            <div class="award-year">2023</div>
+                            <h3 class="award-title">Honorable Mention</h3>
+                            <p class="award-org">臺灣數創大賞 - 智慧+組</p>
+                        </div>
+
+                        <div class="award-card">
+                            <div class="award-year">2022</div>
+                            <h3 class="award-title">Gold Medal</h3>
+                            <p class="award-org">AI CUP - 農地作物現況調查影像辨識競賽(秋季賽)</p>
+                        </div>
+
+                        <div class="award-card">
+                            <div class="award-year">2022</div>
+                            <h3 class="award-title">Honorable Mention</h3>
+                            <p class="award-org">AI CUP - 農地作物現況調查影像辨識競賽(春季賽)</p>
+                        </div>
+
+                        <div class="award-card">
+                            <div class="award-year">2018</div>
+                            <h3 class="award-title">1st Place</h3>
+                            <p class="award-org">Nvidia GTC Taiwan</p>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 頁尾 -->
+        <footer id="footer">
+            <div class="footer-content">
+                <p class="copyright">
+                    © 2025 Kuo-Chen Wu. All rights reserved.<br>
+                    Built with passion for AI and healthcare innovation
+                </p>
+            </div>
+        </footer>
+
+        <!-- 回頂按鈕 -->
+        <div class="scroll-top" id="scrollTop"></div>
+    </div>
+
+    <script>
+        // Global state
+        let audioEnabled = false;
+        let bgmEnabled = false;
+        let themeMode = 'night';
+        let visualMode = 0;
+
+        // Particle system
+        class ParticleSystem {
+            constructor() {
+                this.canvas = document.getElementById('particles-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.particles = [];
+                this.particleCount = 100;
+                
+                this.resize();
+                this.init();
+                this.animate();
+                
+                window.addEventListener('resize', () => this.resize());
+            }
+            
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+            
+            init() {
+                for (let i = 0; i < this.particleCount; i++) {
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height,
+                        vx: (Math.random() - 0.5) * 0.5,
+                        vy: (Math.random() - 0.5) * 0.5,
+                        size: Math.random() * 2 + 1,
+                        opacity: Math.random() * 0.5 + 0.2
+                    });
+                }
+            }
+            
+            animate() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                this.particles.forEach((particle, i) => {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    
+                    if (particle.x < 0 || particle.x > this.canvas.width) particle.vx *= -1;
+                    if (particle.y < 0 || particle.y > this.canvas.height) particle.vy *= -1;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    this.ctx.fillStyle = `rgba(40, 239, 239, ${particle.opacity})`;
+                    this.ctx.fill();
+                    
+                    for (let j = i + 1; j < this.particles.length; j++) {
+                        const dx = this.particles[j].x - particle.x;
+                        const dy = this.particles[j].y - particle.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 100) {
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(particle.x, particle.y);
+                            this.ctx.lineTo(this.particles[j].x, this.particles[j].y);
+                            this.ctx.strokeStyle = `rgba(40, 239, 239, ${0.2 * (1 - distance / 100)})`;
+                            this.ctx.lineWidth = 0.5;
+                            this.ctx.stroke();
+                        }
+                    }
+                });
+                
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        // Audio Select
+        function selectAudio(enabled) {
+            audioEnabled = enabled;
+            bgmEnabled = enabled;
+            document.getElementById('audio-select').classList.remove('show');
+            if (enabled) {
+                updateBGMStatus(true);
+            }
+            startOpening();
+        }
+
+        // Opening Animation
+        function startOpening() {
+            const openingLogo = document.getElementById('openingLogo');
+            const loader = document.getElementById('loader');
+            
+            openingLogo.classList.add('show');
+            
+            // Simulate SVG path animation
+            setTimeout(() => {
+                openingLogo.classList.remove('show');
+                setTimeout(() => {
+                    showMainContent();
+                }, 500);
+            }, 3000);
+        }
+
+        // Show main content
+        function showMainContent() {
+            const stage = document.getElementById('stage');
+            const loader = document.getElementById('loader');
+            
+            loader.classList.add('hidden');
+            stage.classList.add('loaded');
+            document.body.style.overflowY = 'auto';
+            
+            new ParticleSystem();
+            observeSections();
+            initSmoothScroll();
+        }
+
+        // Loading animation
+        function initLoader() {
+            const progressFill = document.getElementById('progressFill');
+            let progress = 0;
+            
+            const interval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress > 100) progress = 100;
+                
+                progressFill.style.width = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        document.getElementById('audio-select').classList.add('show');
+                    }, 500);
+                }
+            }, 100);
+        }
+
+        // BGM Control
+        function toggleBGM() {
+            bgmEnabled = !bgmEnabled;
+            updateBGMStatus(bgmEnabled);
+            playClickSound();
+        }
+
+        function updateBGMStatus(enabled) {
+            const controller = document.getElementById('bgmController');
+            const status = controller.querySelector('.controller-status');
+            
+            if (enabled) {
+                controller.classList.add('active');
+                status.textContent = 'ON';
+            } else {
+                controller.classList.remove('active');
+                status.textContent = 'OFF';
+            }
+        }
+
+        // Theme Control
+        function toggleTheme() {
+            themeMode = themeMode === 'night' ? 'day' : 'night';
+            const controller = document.getElementById('themeController');
+            const status = controller.querySelector('.controller-status');
+            
+            if (themeMode === 'day') {
+                document.body.classList.add('theme-day');
+                status.textContent = 'DAY';
+            } else {
+                document.body.classList.remove('theme-day');
+                status.textContent = 'NIGHT';
+            }
+            
+            playClickSound();
+        }
+
+        // Visual Selector
+        function changeVisual() {
+            visualMode = (visualMode + 1) % 2;
+            const profileImg = document.getElementById('profileImage');
+            
+            if (visualMode === 1) {
+                profileImg.style.filter = 'hue-rotate(180deg)';
+            } else {
+                profileImg.style.filter = 'none';
+            }
+            
+            playClickSound();
+        }
+
+        // Play click sound
+        function playClickSound() {
+            if (audioEnabled) {
+                const se = document.getElementById('se-click');
+                se.currentTime = 0;
+                se.play().catch(() => {});
+            }
+        }
+
+        // Smooth scroll initialization
+        function initSmoothScroll() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    playClickSound();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        window.scrollTo({
+                            top: target.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        }
+
+        // Header scroll effect
+        const header = document.getElementById('header');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // Scroll to top button
+        const scrollTop = document.getElementById('scrollTop');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                scrollTop.classList.add('visible');
+            } else {
+                scrollTop.classList.remove('visible');
+            }
+        });
+
+        scrollTop.addEventListener('click', () => {
+            playClickSound();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Section visibility observer
+        function observeSections() {
+            const sections = document.querySelectorAll('.content-section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -100px 0px'
+            });
+
+            sections.forEach(section => observer.observe(section));
+        }
+
+        // Active navigation
+        const sections = document.querySelectorAll('.content-section');
+        const navLinks = document.querySelectorAll('.main-nav a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (window.scrollY >= (sectionTop - 200)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').slice(1) === current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Initialize
+        window.addEventListener('load', () => {
+            initLoader();
+        });
+    </script>
+</body>
+</html>
